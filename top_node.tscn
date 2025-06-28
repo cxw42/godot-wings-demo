@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3 uid="uid://dv0180t8hngpc"]
+[gd_scene load_steps=28 format=3 uid="uid://dv0180t8hngpc"]
 
 [ext_resource type="Texture2D" uid="uid://b17wt83q0xefi" path="res://icon.svg" id="1_o6vgj"]
 
@@ -11,10 +11,17 @@ func _unhandled_input(event: InputEvent) -> void:
         get_tree().quit()
 "
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6vgj"]
+albedo_color = Color(0, 0, 1, 1)
+
+[sub_resource type="PrismMesh" id="PrismMesh_fifn5"]
+material = SubResource("StandardMaterial3D_o6vgj")
+size = Vector3(5, 10, 0.1)
+
 [sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_ic01r"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_o6vgj"]
-size = Vector3(20, 1, 20)
+size = Vector3(40, 1, 40)
 
 [sub_resource type="GDScript" id="GDScript_o6vgj"]
 resource_name = "character_body_3d.gd"
@@ -62,6 +69,24 @@ size = Vector3(1, 7, 1)
 albedo_color = Color(0.419813, 0.419813, 0.419813, 1)
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fifn5"]
+
+[sub_resource type="GDScript" id="GDScript_afxlr"]
+resource_name = "beam_b"
+script/source = "## Beam B
+extends RigidBody3D
+
+@export var y_force_min: float = 100
+@export var y_force_max: float = 450
+@export var y_freq = 0.05
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+    var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
+    force = remap(force, -1, 1, y_force_min, y_force_max)
+    #print(force)
+    var direction = -transform.basis.x # global_transform * (Vector3(0,1,1).normalized())
+    state.apply_central_force(force * direction)
+    %Arrow.global_transform = Transform3D().rotated(Vector3(0,0,-1), direction.angle_to(Vector3(0,1,0)))
+"
 
 [sub_resource type="BoxMesh" id="BoxMesh_sfd0x"]
 size = Vector3(1, 5, 1)
@@ -111,6 +136,11 @@ size = Vector3(1, 7, 1)
 [node name="Node3D" type="Node3D"]
 script = SubResource("GDScript_fifn5")
 
+[node name="Arrow" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.27798, 0, 2.20119)
+mesh = SubResource("PrismMesh_fifn5")
+
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -22.8512, 0)
 
@@ -120,6 +150,12 @@ shape = SubResource("WorldBoundaryShape3D_ic01r")
 [node name="CSGMesh3D" type="CSGMesh3D" parent="Floor"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.016, -0.5, 0)
 mesh = SubResource("BoxMesh_o6vgj")
+
+[node name="Stopper" type="StaticBody3D" parent="."]
+transform = Transform3D(0.65702, 0.753873, -6.59057e-08, 0.753873, -0.65702, 5.74385e-08, 8.84097e-16, -8.74228e-08, -1, 5.85721, 25.2701, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Stopper"]
+shape = SubResource("WorldBoundaryShape3D_ic01r")
 
 [node name="CharacterBody3D" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2336, 1.76545, 0)
@@ -153,6 +189,7 @@ material = SubResource("StandardMaterial3D_afxlr")
 [node name="B" type="RigidBody3D" parent="."]
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.26396, 2.57417, 1.01775)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+script = SubResource("GDScript_afxlr")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="B"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
