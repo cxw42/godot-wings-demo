@@ -1,3 +1,24 @@
+foo*
+*.sw[op]
+*~
+~*
+*.bak
+*.old
+*.tdy
+
+# ctags/gtags
+tags
+GPATH
+GRTAGS
+GTAGS
+cscope.out
+ID
+
 # Godot 4+ specific ignores
 .godot/
-/android/
+
+# From the official Godot gitignore
+.import/
+/gdextension_interface.h
+extension_api.json
+logs/
