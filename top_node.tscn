@@ -5,10 +5,17 @@
 [sub_resource type="GDScript" id="GDScript_fifn5"]
 resource_name = "top_node.gd"
 script/source = "extends Node3D
+@onready var b: RigidBody3D = $B
+@onready var target_angle_readout: Label = $HUD/Control/VBoxContainer/HBoxContainer/TargetAngleReadout
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed(\"ui_cancel\"):
         get_tree().quit()
+
+
+func _on_desired_angle_changed(value: float) -> void:
+    b.desired_angle = value
+    target_angle_readout.text = \"%.f\" % value
 "
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6vgj"]
@@ -75,13 +82,27 @@ resource_name = "beam_b"
 script/source = "## Beam B
 extends RigidBody3D
 
+@onready var a_to_b: HingeJoint3D = $\"../A to B\"
+
+@onready var angle_label: Label = $\"../HUD/Control/VBoxContainer/AngleLabel\"
+
+@export var Kp: float = 100
+
+@export var desired_angle: float = 0 ## degrees from X towards Y
+
 @export var y_force_min: float = 100
 @export var y_force_max: float = 450
 @export var y_freq = 0.05
 
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
-    var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
-    force = remap(force, -1, 1, y_force_min, y_force_max)
+    # Get current angle w.r.t a_to_b
+    var base_to_center = (global_position - a_to_b.global_position).normalized()
+    var angle = rad_to_deg(atan2(base_to_center.y, base_to_center.x))
+    angle_label.text = \"%.f\" % angle
+    var difference = desired_angle - angle
+    var force = Kp*difference
+    # var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
+    # force = remap(force, -1, 1, y_force_min, y_force_max)
     #print(force)
     var direction = -transform.basis.x # global_transform * (Vector3(0,1,1).normalized())
     state.apply_central_force(force * direction)
@@ -204,9 +225,9 @@ material = SubResource("StandardMaterial3D_afxlr")
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.26396, 2.57417, 1.01775)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 script = SubResource("GDScript_afxlr")
+Kp = 200.0
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="B"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_sfd0x")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="B"]
@@ -217,7 +238,6 @@ transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 4.
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="C"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_o6dvp")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="C"]
@@ -228,7 +248,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.61049, 9.51755, 0)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_afxlr")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="D"]
@@ -239,7 +258,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.13014, 16.5175, 0)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="E"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_h11p4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="E"]
@@ -250,7 +268,6 @@ transform = Transform3D(0.602526, 0.7981, 0, -0.7981, 0.602526, 0, 0, 0, 1, 10.4
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="F"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 mesh = SubResource("BoxMesh_st5u5")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="F"]
@@ -337,3 +354,47 @@ mesh = SubResource("BoxMesh_fifn5")
 environment = SubResource("Environment_o6vgj")
 camera_attributes = SubResource("CameraAttributesPractical_fifn5")
 compositor = SubResource("Compositor_oc6vn")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="HUD"]
+custom_minimum_size = Vector2(512, 512)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HUD/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AngleLabel" type="Label" parent="HUD/Control/VBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+text = "angle
+"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HUD/Control/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "Desired angle: "
+
+[node name="Slider" type="HSlider" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -90.0
+max_value = 90.0
+
+[node name="TargetAngleReadout" type="Label" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+text = "0"
+
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/HBoxContainer/Slider" to="." method="_on_desired_angle_changed"]
