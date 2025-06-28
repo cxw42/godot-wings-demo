@@ -53,6 +53,10 @@ func rebuild_():
     if not is_inside_tree() or not a_to_b:
         return
 
+    # Freeze the nodes so we can move them
+    for node in [b_beam, c_beam, d_beam, e_beam, f_beam]:
+        node.freeze = true
+
     var a_m = i2m(a)
     var b_m = i2m(b)
     var c_m = i2m(c)
@@ -70,15 +74,31 @@ func rebuild_():
 
     # Reposition the end-of-beam joints, starting from the base (A).
     # Each beam's Y axis extends along the beam, away from A.
-    a_to_b.global_position = a_beam.global_position - a_beam.global_basis.y * Vector3(0,a_m/2,0)
-    a_to_c.global_position = a_beam.global_position + a_beam.global_basis.y * Vector3(0,a_m/2,0)
-    b_to_d.global_position = a_to_b.global_position + b_beam.global_basis.y * Vector3(0,b_m,0)
-    c_to_e.global_position = c_beam.global_position + c_beam.global_basis.y * Vector3(0,c_m,0)
-    d_to_f.global_position = d_beam.global_position + d_beam.global_basis.y * Vector3(0,d_m,0)
+    var a_bottom = a_beam.global_position - a_beam.global_basis.y * Vector3(0,a_m/2,0)
+    a_to_b.global_position = a_bottom
+
+    var a_top = a_beam.global_position + a_beam.global_basis.y * Vector3(0,a_m/2,0)
+    a_to_c.global_position = a_top
+    b_to_d.global_position = a_to_b.global_position + -b_beam.global_basis.y * Vector3(0,b_m,0)
+    c_to_e.global_position = c_beam.global_position + -c_beam.global_basis.y * Vector3(0,c_m,0)
+    d_to_f.global_position = d_beam.global_position + -d_beam.global_basis.y * Vector3(0,d_m,0)
 
     # Central ones
-    c_to_d.global_position = c_beam.global_position + c_beam.global_basis.y * Vector3(0,c_m*along_c_pct,0)
-    e_to_f.global_position = f_beam.global_position + f_beam.global_basis.y * Vector3(0,f_m*along_f_pct,0)
+    c_to_d.global_position = c_beam.global_position + -c_beam.global_basis.y * Vector3(0,c_m*along_c_pct,0)
+    e_to_f.global_position = f_beam.global_position + -f_beam.global_basis.y * Vector3(0,f_m*along_f_pct,0)
+
+    # Reposition the beams
+    b_beam.global_position = a_bottom + -b_beam.global_basis.y * Vector3(0, b_m/2, 0)
+    c_beam.global_position = a_top + c_beam.global_basis.y * Vector3(0, c_m/2, 0)
+    #print(c_beam.global_position)
+    d_beam.global_position = b_to_d.global_position + -d_beam.global_basis.y * Vector3(0, d_m/2, 0)
+    e_beam.global_position = c_to_e.global_position + -e_beam.global_basis.y * Vector3(0, e_m/2, 0)
+    f_beam.global_position = d_to_f.global_position + -f_beam.global_basis.y * Vector3(0, f_m/2, 0)
+
+    await get_tree().physics_frame
+
+    for node in [b_beam, c_beam, d_beam, e_beam, f_beam]:
+        node.freeze = false
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed(\"ui_cancel\"):
@@ -283,6 +303,7 @@ shape = SubResource("BoxShape3D_fifn5")
 [node name="B" type="RigidBody3D" parent="."]
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.26396, 2.57417, 1.01775)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+freeze_mode = 1
 script = SubResource("GDScript_afxlr")
 Kp = 200.0
 
@@ -295,6 +316,7 @@ shape = SubResource("BoxShape3D_h11p4")
 [node name="C" type="RigidBody3D" parent="."]
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 4.55078, 10.6468, 1.01775)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+freeze_mode = 1
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="C"]
 mesh = SubResource("BoxMesh_o6dvp")
@@ -305,6 +327,7 @@ shape = SubResource("BoxShape3D_st5u5")
 [node name="D" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.61049, 9.51755, 0)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+freeze_mode = 1
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="D"]
 mesh = SubResource("BoxMesh_afxlr")
@@ -315,6 +338,7 @@ shape = SubResource("BoxShape3D_sfd0x")
 [node name="E" type="RigidBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.13014, 16.5175, 0)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+freeze_mode = 1
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="E"]
 mesh = SubResource("BoxMesh_h11p4")
@@ -325,6 +349,7 @@ shape = SubResource("BoxShape3D_o6dvp")
 [node name="F" type="RigidBody3D" parent="."]
 transform = Transform3D(0.602526, 0.7981, 0, -0.7981, 0.602526, 0, 0, 0, 1, 10.4272, 19.8252, 1)
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
+freeze_mode = 1
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="F"]
 mesh = SubResource("BoxMesh_st5u5")
@@ -444,32 +469,32 @@ maximum = 90.0
 [node name="A Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="B Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="C Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="D Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="E Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="F Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
 minimum = 1.0
-maximum = 100.0
+maximum = 1000.0
 
 [node name="C-to-D percentage" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
