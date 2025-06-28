@@ -1,21 +1,135 @@
-[gd_scene load_steps=33 format=3 uid="uid://dv0180t8hngpc"]
+[gd_scene load_steps=28 format=3 uid="uid://dv0180t8hngpc"]
 
-[ext_resource type="Texture2D" uid="uid://b17wt83q0xefi" path="res://icon.svg" id="1_o6vgj"]
+[ext_resource type="PackedScene" uid="uid://b5x4ronrhv2tt" path="res://h_slider_label.tscn" id="2_fifn5"]
 
 [sub_resource type="GDScript" id="GDScript_fifn5"]
 resource_name = "top_node.gd"
 script/source = "extends Node3D
-@onready var b: RigidBody3D = $B
-@onready var target_angle_readout: Label = $HUD/Control/VBoxContainer/HBoxContainer/TargetAngleReadout
+@onready var b_beam: RigidBody3D = $B
+@onready var a_beam: StaticBody3D = $\"Base (A)\"
+@onready var c_beam: RigidBody3D = $C
+@onready var d_beam: RigidBody3D = $D
+@onready var e_beam: RigidBody3D = $E
+@onready var f_beam: RigidBody3D = $F
+@onready var a_to_b: HingeJoint3D = $\"A to B\"
+@onready var c_to_d: HingeJoint3D = $\"C to D\"
+@onready var b_to_d: HingeJoint3D = $\"B to D\"
+@onready var a_to_c: HingeJoint3D = $\"A to C\"
+@onready var c_to_e: HingeJoint3D = $\"C to E\"
+@onready var d_to_f: HingeJoint3D = $\"D to F\"
+@onready var e_to_f: HingeJoint3D = $\"E to F\"
+
+# Lengths of the beams (inches)
+var a: float
+var b: float
+var c: float
+var d: float
+var e: float
+var f: float
+
+# How far along the beams the mid-beam joints are
+var along_c_pct: float ## c->d pctage of the way along C, 0..1
+var along_f_pct: float ## e->f pctage of the way along F, 0..1
+
+## Resize a beam having a CSGMesh3D child and a CollisionShape3D child,
+## in that order.
+func resize_beam_(beam: Node3D, length_m: float):
+    if not beam:
+        return
+
+    var mesh := beam.get_child(0) as CSGMesh3D
+    var box := mesh.mesh as BoxMesh
+    box.size.y = length_m
+
+    var collision := beam.get_child(1) as CollisionShape3D
+    var shape := collision.shape as BoxShape3D
+    shape.size.y = length_m
+
+## inches to meters.  The GUI is in inches.
+func i2m(inches: float):
+    return inches/39.37
+
+func rebuild_():
+    if not is_inside_tree() or not a_to_b:
+        return
+
+    var a_m = i2m(a)
+    var b_m = i2m(b)
+    var c_m = i2m(c)
+    var d_m = i2m(d)
+    var e_m = i2m(e)
+    var f_m = i2m(f)
+
+    # Resize
+    resize_beam_(a_beam, a_m)
+    resize_beam_(b_beam, b_m)
+    resize_beam_(c_beam, c_m)
+    resize_beam_(d_beam, d_m)
+    resize_beam_(e_beam, e_m)
+    resize_beam_(f_beam, f_m)
+
+    # Reposition the end-of-beam joints, starting from the base (A).
+    # Each beam's Y axis extends along the beam, away from A.
+    a_to_b.global_position = a_beam.global_position - a_beam.global_basis.y * Vector3(0,a_m/2,0)
+    a_to_c.global_position = a_beam.global_position + a_beam.global_basis.y * Vector3(0,a_m/2,0)
+    b_to_d.global_position = a_to_b.global_position + b_beam.global_basis.y * Vector3(0,b_m,0)
+    c_to_e.global_position = c_beam.global_position + c_beam.global_basis.y * Vector3(0,c_m,0)
+    d_to_f.global_position = d_beam.global_position + d_beam.global_basis.y * Vector3(0,d_m,0)
+
+    # Central ones
+    c_to_d.global_position = c_beam.global_position + c_beam.global_basis.y * Vector3(0,c_m*along_c_pct,0)
+    e_to_f.global_position = f_beam.global_position + f_beam.global_basis.y * Vector3(0,f_m*along_f_pct,0)
 
 func _unhandled_input(event: InputEvent) -> void:
     if event.is_action_pressed(\"ui_cancel\"):
         get_tree().quit()
 
+func _on_desired_angle_value_changed(value: float) -> void:
+    b_beam.desired_angle = value
 
-func _on_desired_angle_changed(value: float) -> void:
-    b.desired_angle = value
-    target_angle_readout.text = \"%.f\" % value
+
+func _on_a_length_value_changed(value: float) -> void:
+    a = value
+    rebuild_()
+
+
+func _on_b_length_value_changed(value: float) -> void:
+    b = value
+    rebuild_()
+
+
+func _on_c_length_value_changed(value: float) -> void:
+    c = value
+    rebuild_()
+
+
+func _on_d_length_value_changed(value: float) -> void:
+    d = value
+    rebuild_()
+
+
+func _on_e_length_value_changed(value: float) -> void:
+    e = value
+    rebuild_()
+
+
+func _on_f_length_value_changed(value: float) -> void:
+    f = value
+    rebuild_()
+
+
+func _on_cto_d_percentage_value_changed(value: float) -> void:
+    along_c_pct = value
+    rebuild_()
+
+
+func _on_eto_f_pct_value_changed(value: float) -> void:
+    along_f_pct = value
+    rebuild_()
+
+
+func _on_check_box_toggled(toggled_on: bool) -> void:
+    b_beam.enabled = toggled_on
 "
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o6vgj"]
@@ -30,50 +144,16 @@ size = Vector3(5, 10, 0.1)
 [sub_resource type="BoxMesh" id="BoxMesh_o6vgj"]
 size = Vector3(40, 1, 40)
 
-[sub_resource type="GDScript" id="GDScript_o6vgj"]
-resource_name = "character_body_3d.gd"
-script/source = "extends CharacterBody3D
-
-
-const SPEED = 5.0
-const JUMP_VELOCITY = 4.5
-
-
-func _physics_process(delta: float) -> void:
-    # Add the gravity.
-    if not is_on_floor():
-        velocity += get_gravity() * delta
-
-    # Handle jump.
-    if Input.is_action_just_pressed(\"ui_accept\") and is_on_floor():
-        velocity.y = JUMP_VELOCITY
-
-    # Get the input direction and handle the movement/deceleration.
-    # As good practice, you should replace UI actions with custom gameplay actions.
-    var input_dir := Input.get_vector(\"ui_left\", \"ui_right\", \"ui_up\", \"ui_down\")
-    var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
-    if direction:
-        velocity.x = direction.x * SPEED
-        velocity.z = direction.z * SPEED
-    else:
-        velocity.x = move_toward(velocity.x, 0, SPEED)
-        velocity.z = move_toward(velocity.z, 0, SPEED)
-
-    move_and_slide()
-"
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fifn5"]
-
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_o6vgj"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_fifn5"]
-size = Vector3(1, 7, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_oc6vn"]
 size = Vector3(1, 7, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_afxlr"]
 albedo_color = Color(0.419813, 0.419813, 0.419813, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fifn5"]
+size = Vector3(1, 7, 1)
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fifn5"]
 
@@ -84,7 +164,7 @@ extends RigidBody3D
 
 @onready var a_to_b: HingeJoint3D = $\"../A to B\"
 
-@onready var angle_label: Label = $\"../HUD/Control/VBoxContainer/AngleLabel\"
+@onready var current_angle_label: Label = $\"../HUD/Control/VBoxContainer/HBoxContainer/CurrentAngleLabel\"
 
 @export var Kp: float = 100
 
@@ -94,11 +174,16 @@ extends RigidBody3D
 @export var y_force_max: float = 450
 @export var y_freq = 0.05
 
+@export var enabled: bool = true
+
 func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+    if not enabled:
+        return
+
     # Get current angle w.r.t a_to_b
     var base_to_center = (global_position - a_to_b.global_position).normalized()
     var angle = rad_to_deg(atan2(base_to_center.y, base_to_center.x))
-    angle_label.text = \"%.f\" % angle
+    current_angle_label.text = \"%.f\" % angle
     var difference = desired_angle - angle
     var force = Kp*difference
     # var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
@@ -139,21 +224,6 @@ size = Vector3(1, 14.5, 1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_a0w0v"]
 size = Vector3(1, 14.5, 1)
 
-[sub_resource type="GDScript" id="GDScript_oc6vn"]
-script/source = "extends Skeleton3D
-
-
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-    physical_bones_start_simulation()
-"
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_o6vgj"]
-size = Vector3(1, 7, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_fifn5"]
-size = Vector3(1, 7, 1)
-
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_o6vgj"]
 
 [sub_resource type="Sky" id="Sky_fifn5"]
@@ -192,17 +262,6 @@ transform = Transform3D(0.65702, 0.753873, -6.59057e-08, 0.753873, -0.65702, 5.7
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Stopper"]
 shape = SubResource("WorldBoundaryShape3D_ic01r")
 
-[node name="CharacterBody3D" type="CharacterBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2336, 1.76545, 0)
-visible = false
-script = SubResource("GDScript_o6vgj")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="CharacterBody3D"]
-shape = SubResource("CapsuleShape3D_fifn5")
-
-[node name="Sprite3D" type="Sprite3D" parent="CharacterBody3D"]
-texture = ExtResource("1_o6vgj")
-
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.12363, 14.6625, 17.4076)
 fov = 97.5
@@ -214,12 +273,12 @@ transform = Transform3D(1, 0, 0, 0, 0.99818, 0.0602994, 0, -0.0602994, 0.99818, 
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
 physics_material_override = SubResource("PhysicsMaterial_o6vgj")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Base (A)"]
-shape = SubResource("BoxShape3D_fifn5")
-
 [node name="CSGMesh3D" type="CSGMesh3D" parent="Base (A)"]
 mesh = SubResource("BoxMesh_oc6vn")
 material = SubResource("StandardMaterial3D_afxlr")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Base (A)"]
+shape = SubResource("BoxShape3D_fifn5")
 
 [node name="B" type="RigidBody3D" parent="."]
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.26396, 2.57417, 1.01775)
@@ -336,20 +395,6 @@ node_b = NodePath("../F")
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
 radius = 0.25
 
-[node name="Skeleton3D" type="Skeleton3D" parent="."]
-visible = false
-script = SubResource("GDScript_oc6vn")
-
-[node name="PhysicalBone3D" type="PhysicalBone3D" parent="Skeleton3D"]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Skeleton3D/PhysicalBone3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6077, 0, 0)
-shape = SubResource("BoxShape3D_o6vgj")
-
-[node name="CSGMesh3D" type="CSGMesh3D" parent="Skeleton3D/PhysicalBone3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6077, 0, 0)
-mesh = SubResource("BoxMesh_fifn5")
-
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_o6vgj")
 camera_attributes = SubResource("CameraAttributesPractical_fifn5")
@@ -374,27 +419,77 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="AngleLabel" type="Label" parent="HUD/Control/VBoxContainer"]
-custom_minimum_size = Vector2(20, 20)
+[node name="CheckBox" type="CheckBox" parent="HUD/Control/VBoxContainer"]
 layout_mode = 2
-text = "angle
-"
+button_pressed = true
+text = "Enable"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HUD/Control/VBoxContainer"]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="HUD/Control/VBoxContainer/HBoxContainer"]
 layout_mode = 2
-text = "Desired angle: "
+text = "Current angle:"
 
-[node name="Slider" type="HSlider" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+[node name="CurrentAngleLabel" type="Label" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
 layout_mode = 2
-size_flags_horizontal = 3
-min_value = -90.0
-max_value = 90.0
+text = "angle"
 
-[node name="TargetAngleReadout" type="Label" parent="HUD/Control/VBoxContainer/HBoxContainer"]
+[node name="DesiredAngle" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
 layout_mode = 2
-text = "0"
+minimum = -90.0
+maximum = 90.0
 
-[connection signal="value_changed" from="HUD/Control/VBoxContainer/HBoxContainer/Slider" to="." method="_on_desired_angle_changed"]
+[node name="A Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="B Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="C Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="D Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="E Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="F Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 1.0
+maximum = 100.0
+
+[node name="C-to-D percentage" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 0.05
+maximum = 1.0
+format_string = "%.2f"
+
+[node name="E-to-F pct" parent="HUD/Control/VBoxContainer" instance=ExtResource("2_fifn5")]
+layout_mode = 2
+minimum = 0.05
+maximum = 1.0
+format_string = "%.2f"
+
+[connection signal="toggled" from="HUD/Control/VBoxContainer/CheckBox" to="." method="_on_check_box_toggled"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/DesiredAngle" to="." method="_on_desired_angle_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/A Length" to="." method="_on_a_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/B Length" to="." method="_on_b_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/C Length" to="." method="_on_c_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/D Length" to="." method="_on_d_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/E Length" to="." method="_on_e_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/F Length" to="." method="_on_f_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/C-to-D percentage" to="." method="_on_cto_d_percentage_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/E-to-F pct" to="." method="_on_eto_f_pct_value_changed"]

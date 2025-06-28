@@ -1,0 +1,22 @@
+[gd_scene load_steps=2 format=3 uid="uid://b5x4ronrhv2tt"]
+
+[ext_resource type="Script" uid="uid://cr8kipclofwl6" path="res://h_slider_label.gd" id="1_lnv40"]
+
+[node name="HSliderLabel" type="HBoxContainer"]
+script = ExtResource("1_lnv40")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "Desired angle: "
+
+[node name="Slider" type="HSlider" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -90.0
+max_value = 90.0
+
+[node name="ValueReadout" type="Label" parent="."]
+layout_mode = 2
+text = "0"
+
+[connection signal="value_changed" from="Slider" to="." method="_on_slider_value_changed"]
