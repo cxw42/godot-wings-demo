@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="Wings"
+run/main_scene="uid://dv0180t8hngpc"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[physics]
+
+3d/default_gravity=32.0
 
 [rendering]
 
