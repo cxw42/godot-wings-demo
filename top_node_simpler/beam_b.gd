@@ -19,6 +19,13 @@ var current_angle_label: Label = $"../HUD/Control/VBoxContainer/HBoxContainer/Cu
 @export var enabled: bool = true
 
 
+func _process(_delta: float) -> void:
+	var angle: float = rad_to_deg(
+		-global_transform.basis.y.signed_angle_to(Vector3.RIGHT, Vector3.BACK)
+	)
+	current_angle_label.text = "%.f" % angle
+
+
 func _physics_process(_delta: float) -> void:
 	if not enabled:
 		return
@@ -35,10 +42,11 @@ func _physics_process(_delta: float) -> void:
 	# var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
 	# force = remap(force, -1, 1, y_force_min, y_force_max)
 	#print(force)
-	var direction := -transform.basis.x  # global_transform * (Vector3(0,1,1).normalized())
+	var direction := -transform.basis.x
 	apply_central_force(force * direction)
-	#%Arrow.global_transform = Transform3D().rotated(Vector3(0,0,-1), direction.angle_to(Vector3(0,1,0)))
 
+
+# --- Control law ---
 
 var last_error_ := 0.0
 var accum_error_ := 0.0
