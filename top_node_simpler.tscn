@@ -62,7 +62,7 @@ func _physics_process(_delta: float) -> void:
     #print(force)
     var direction = -transform.basis.x # global_transform * (Vector3(0,1,1).normalized())
     apply_central_force(force * direction)
-    %Arrow.global_transform = Transform3D().rotated(Vector3(0,0,-1), direction.angle_to(Vector3(0,1,0)))
+    #%Arrow.global_transform = Transform3D().rotated(Vector3(0,0,-1), direction.angle_to(Vector3(0,1,0)))
 "
 
 [sub_resource type="BoxMesh" id="BoxMesh_sfd0x"]
@@ -90,6 +90,7 @@ script = ExtResource("1_huilb")
 [node name="Arrow" type="MeshInstance3D" parent="."]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.27798, 0, 2.20119)
+visible = false
 mesh = SubResource("PrismMesh_fifn5")
 
 [node name="Floor" type="StaticBody3D" parent="."]

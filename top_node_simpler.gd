@@ -15,8 +15,10 @@ var need_rebuild := false
 
 func _ready() -> void:
 	prints("ready", ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
-	a_length.value = m2i(((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
-	b_length.value = m2i(((b_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
+	a = m2i(((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
+	a_length.value = a
+	b = m2i(((b_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
+	b_length.value = b
 	a_length.enabled = true
 	b_length.enabled = true
 
@@ -27,17 +29,34 @@ func _ready() -> void:
 
 ## Resize a beam having a CSGMesh3D child and a CollisionShape3D child,
 ## in that order.
-func resize_beam_(beam: Node3D, length_m: float):
+func resize_beam_(beam: Node3D, length_m: float, minus_y_global_position: Vector3) -> Node3D:
 	if not beam:
-		return
+		return null
 
-	var mesh := beam.get_child(0) as CSGMesh3D
+	# Create a new beam with the new size
+	var new_beam := beam.duplicate()
+
+	var mesh := new_beam.get_child(0) as CSGMesh3D
 	var box := mesh.mesh as BoxMesh
+	var old_length_m := box.size.y
 	box.size.y = length_m
 
-	var collision := beam.get_child(1) as CollisionShape3D
+	var collision := new_beam.get_child(1) as CollisionShape3D
 	var shape := collision.shape as BoxShape3D
 	shape.size.y = length_m
+
+	# Add and position the new beam
+	beam.get_parent().add_child(new_beam)
+	new_beam.global_position = (
+		minus_y_global_position + new_beam.global_basis.y.normalized() * length_m / 2
+	)
+
+	# Remove the old beam.  The caller is responsible for updating references
+	# to point to the new beam.
+	beam.get_parent().remove_child(beam)
+	beam.queue_free()
+
+	return new_beam
 
 
 ## inches to meters.  The GUI is in inches.
@@ -54,8 +73,10 @@ func rebuild_():
 	var b_m = i2m(b)
 
 	# Resize
-	resize_beam_(a_beam, a_m)
-	resize_beam_(b_beam, b_m)
+	a_beam = resize_beam_(a_beam, a_m, a_to_b.global_position)
+	b_beam = resize_beam_(b_beam, b_m, a_to_b.global_position)
+	a_to_b.node_a = a_beam.get_path()
+	a_to_b.node_b = b_beam.get_path()
 
 	if false:  # XXX experiment
 		# Reposition the beams and end-of-beam joints, starting from the base (A).
