@@ -108,6 +108,7 @@ shape = SubResource("BoxShape3D_h11p4")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 node_a = NodePath("../Base (A)")
 node_b = NodePath("../B")
+params/bias = 0.64
 
 [node name="CSGCylinder3D" type="CSGCylinder3D" parent="A to B"]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
