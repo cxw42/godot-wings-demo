@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cnbrrth4s3aob"]
+[gd_scene load_steps=19 format=3 uid="uid://cnbrrth4s3aob"]
 
 [ext_resource type="Script" uid="uid://bf527net5b3iw" path="res://top_node_simpler/top_node_simpler.gd" id="1_huilb"]
 [ext_resource type="PackedScene" uid="uid://b5x4ronrhv2tt" path="res://helper_scenes/h_slider_label.tscn" id="1_thn2q"]
@@ -26,8 +26,6 @@ albedo_color = Color(0.419813, 0.419813, 0.419813, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_fifn5"]
 size = Vector3(1, 7, 1)
-
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_fifn5"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_sfd0x"]
 size = Vector3(1, 5, 1)
@@ -93,11 +91,11 @@ shape = SubResource("BoxShape3D_fifn5")
 
 [node name="B" type="RigidBody3D" parent="."]
 transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.26396, 2.57417, 1.01775)
-physics_material_override = SubResource("PhysicsMaterial_fifn5")
 freeze_mode = 1
+angular_damp = 30.0
 script = ExtResource("2_u25px")
-Kp = 100.0
-y_force_max = 300.0
+Kd = 100.0
+Ki = 0.0
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="B"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0410719)
