@@ -5,15 +5,29 @@
 [sub_resource type="GDScript" id="GDScript_fifn5"]
 resource_name = "top_node.gd"
 script/source = "extends Node3D
-@onready var b_beam: RigidBody3D = $B
 @onready var a_beam: StaticBody3D = $\"Base (A)\"
+@onready var b_beam: RigidBody3D = $B
 @onready var a_to_b: HingeJoint3D = $\"A to B\"
+
+@onready var a_length: HBoxContainer = $\"HUD/Control/VBoxContainer/A Length (inches)\"
+@onready var b_length: HBoxContainer = $\"HUD/Control/VBoxContainer/B Length (inches)\"
 
 # Lengths of the beams (inches)
 var a: float
 var b: float
 
 var need_rebuild := false
+
+func _ready() -> void:
+    prints(\"ready\", ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
+    a_length.value = ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y
+    b_length.value = ((b_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y
+    a_length.enabled = true
+    b_length.enabled = true
+
+
+#func _process(_delta: float) -> void:
+#    prints(\"process\", ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
 
 ## Resize a beam having a CSGMesh3D child and a CollisionShape3D child,
 ## in that order.
@@ -34,10 +48,6 @@ func i2m(inches: float):
     return inches/39.37
 
 func rebuild_():
-    if not is_inside_tree() or not a_to_b:
-        return
-    #need_rebuild = false
-
     var a_m = i2m(a)
     var b_m = i2m(b)
 
@@ -49,10 +59,10 @@ func rebuild_():
         # Reposition the beams and end-of-beam joints, starting from the base (A).
         # Each beam's Y axis extends along the beam, away from A.
         var a_bottom = a_beam.global_position - a_beam.global_basis.y.normalized() * Vector3(0,a_m/2,0)
-        a_to_b.global_position = a_bottom
+        #a_to_b.global_position = a_bottom
         b_beam.global_position = a_bottom + b_beam.global_basis.y.normalized() * Vector3(0, b_m/2, 0)
 
-        var a_top = a_beam.global_position + a_beam.global_basis.y.normalized() * Vector3(0,a_m/2,0)
+        #var a_top = a_beam.global_position + a_beam.global_basis.y.normalized() * Vector3(0,a_m/2,0)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -64,11 +74,13 @@ func _on_desired_angle_value_changed(value: float) -> void:
 
 
 func _on_a_length_value_changed(value: float) -> void:
+    prints(\"a length changed\", value)
     a = value
     need_rebuild = true
 
 
 func _on_b_length_value_changed(value: float) -> void:
+    prints(\"b length changed\", value)
     b = value
     need_rebuild = true
 
@@ -117,7 +129,7 @@ extends RigidBody3D
 
 @onready var current_angle_label: Label = $\"../HUD/Control/VBoxContainer/HBoxContainer/CurrentAngleLabel\"
 
-@export var Kp: float = 100
+@export var Kp: float = 50
 
 @export var desired_angle: float = 0 ## degrees from X towards Y
 
@@ -275,17 +287,19 @@ layout_mode = 2
 minimum = -90.0
 maximum = 90.0
 
-[node name="A Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("1_thn2q")]
+[node name="A Length (inches)" parent="HUD/Control/VBoxContainer" instance=ExtResource("1_thn2q")]
 layout_mode = 2
 minimum = 1.0
 maximum = 1000.0
+enabled = false
 
-[node name="B Length" parent="HUD/Control/VBoxContainer" instance=ExtResource("1_thn2q")]
+[node name="B Length (inches)" parent="HUD/Control/VBoxContainer" instance=ExtResource("1_thn2q")]
 layout_mode = 2
 minimum = 1.0
 maximum = 1000.0
+enabled = false
 
 [connection signal="toggled" from="HUD/Control/VBoxContainer/CheckBox" to="." method="_on_check_box_toggled"]
 [connection signal="value_changed" from="HUD/Control/VBoxContainer/DesiredAngle" to="." method="_on_desired_angle_value_changed"]
-[connection signal="value_changed" from="HUD/Control/VBoxContainer/A Length" to="." method="_on_a_length_value_changed"]
-[connection signal="value_changed" from="HUD/Control/VBoxContainer/B Length" to="." method="_on_b_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/A Length (inches)" to="." method="_on_a_length_value_changed"]
+[connection signal="value_changed" from="HUD/Control/VBoxContainer/B Length (inches)" to="." method="_on_b_length_value_changed"]
