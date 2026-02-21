@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://b5x4ronrhv2tt"]
 
-[ext_resource type="Script" uid="uid://cr8kipclofwl6" path="res://h_slider_label.gd" id="1_lnv40"]
+[ext_resource type="Script" uid="uid://cr8kipclofwl6" path="res://helper_scenes/h_slider_label.gd" id="1_lnv40"]
 
 [node name="HSliderLabel" type="HBoxContainer"]
 script = ExtResource("1_lnv40")

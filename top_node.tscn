@@ -1,6 +1,6 @@
 [gd_scene load_steps=28 format=3 uid="uid://dv0180t8hngpc"]
 
-[ext_resource type="PackedScene" uid="uid://b5x4ronrhv2tt" path="res://h_slider_label.tscn" id="2_fifn5"]
+[ext_resource type="PackedScene" uid="uid://b5x4ronrhv2tt" path="res://helper_scenes/h_slider_label.tscn" id="2_fifn5"]
 
 [sub_resource type="GDScript" id="GDScript_fifn5"]
 resource_name = "top_node.gd"
