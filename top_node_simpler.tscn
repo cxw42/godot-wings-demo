@@ -127,7 +127,7 @@ extends RigidBody3D
 
 @export var enabled: bool = true
 
-func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+func _physics_process(_delta: float) -> void:
     if not enabled:
         return
 
@@ -141,7 +141,7 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
     # force = remap(force, -1, 1, y_force_min, y_force_max)
     #print(force)
     var direction = -transform.basis.x # global_transform * (Vector3(0,1,1).normalized())
-    state.apply_central_force(force * direction)
+    apply_central_force(force * direction)
     %Arrow.global_transform = Transform3D().rotated(Vector3(0,0,-1), direction.angle_to(Vector3(0,1,0)))
 "
 
