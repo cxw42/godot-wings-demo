@@ -10,7 +10,13 @@ var current_angle_label: Label = $"../HUD/Control/VBoxContainer/HBoxContainer/Cu
 
 @export var Ki: float = 5
 
-@export var desired_angle: float = 0  ## degrees from X towards Y
+## degrees from X towards Y
+@export var desired_angle: float = 0:
+	set(p_new):
+		desired_angle = p_new
+		notify_property_list_changed()
+		accum_error_ = 0
+		last_error_ = 0
 
 @export var y_force_min: float = 100
 @export var y_force_max: float = 450
