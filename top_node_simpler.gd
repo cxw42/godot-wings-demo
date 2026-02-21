@@ -38,7 +38,6 @@ func resize_beam_(beam: Node3D, length_m: float, minus_y_global_position: Vector
 
 	var mesh := new_beam.get_child(0) as CSGMesh3D
 	var box := mesh.mesh as BoxMesh
-	var old_length_m := box.size.y
 	box.size.y = length_m
 
 	var collision := new_beam.get_child(1) as CollisionShape3D
@@ -77,19 +76,6 @@ func rebuild_():
 	b_beam = resize_beam_(b_beam, b_m, a_to_b.global_position)
 	a_to_b.node_a = a_beam.get_path()
 	a_to_b.node_b = b_beam.get_path()
-
-	if false:  # XXX experiment
-		# Reposition the beams and end-of-beam joints, starting from the base (A).
-		# Each beam's Y axis extends along the beam, away from A.
-		var a_bottom = (
-			a_beam.global_position - a_beam.global_basis.y.normalized() * Vector3(0, a_m / 2, 0)
-		)
-		#a_to_b.global_position = a_bottom
-		b_beam.global_position = (
-			a_bottom + b_beam.global_basis.y.normalized() * Vector3(0, b_m / 2, 0)
-		)
-
-		#var a_top = a_beam.global_position + a_beam.global_basis.y.normalized() * Vector3(0,a_m/2,0)
 
 
 func _unhandled_input(event: InputEvent) -> void:

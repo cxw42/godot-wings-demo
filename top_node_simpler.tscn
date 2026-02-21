@@ -33,8 +33,6 @@ resource_name = "beam_b"
 script/source = "## Beam B
 extends RigidBody3D
 
-@onready var a_to_b: HingeJoint3D = $\"../A to B\"
-
 @onready var current_angle_label: Label = $\"../HUD/Control/VBoxContainer/HBoxContainer/CurrentAngleLabel\"
 
 @export var Kp: float = 50
@@ -51,11 +49,11 @@ func _physics_process(_delta: float) -> void:
     if not enabled:
         return
 
-    # Get current angle w.r.t a_to_b
-    var base_to_center = (global_position - a_to_b.global_position).normalized()
-    var angle = rad_to_deg(atan2(base_to_center.y, base_to_center.x))
+    # Get current angle w.r.t. the X axis.  Negate to get positive rotation around +Z
+    var angle = rad_to_deg(-global_transform.basis.y.signed_angle_to(Vector3.RIGHT, Vector3.BACK))
     current_angle_label.text = \"%.f\" % angle
     var difference = desired_angle - angle
+    #prints(angle, difference)
     var force = Kp*difference
     # var force = sin(2*PI*y_freq*Time.get_ticks_msec()/1000)
     # force = remap(force, -1, 1, y_force_min, y_force_max)
@@ -132,7 +130,8 @@ transform = Transform3D(0.43218, 0.901787, 0, -0.901787, 0.43218, 0, 0, 0, 1, 2.
 physics_material_override = SubResource("PhysicsMaterial_fifn5")
 freeze_mode = 1
 script = SubResource("GDScript_afxlr")
-Kp = 200.0
+Kp = 100.0
+y_force_max = 300.0
 
 [node name="CSGMesh3D" type="CSGMesh3D" parent="B"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0410719)
