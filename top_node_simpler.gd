@@ -15,8 +15,8 @@ var need_rebuild := false
 
 func _ready() -> void:
 	prints("ready", ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
-	a_length.value = ((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y
-	b_length.value = ((b_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y
+	a_length.value = m2i(((a_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
+	b_length.value = m2i(((b_beam.get_child(1) as CollisionShape3D).shape as BoxShape3D).size.y)
 	a_length.enabled = true
 	b_length.enabled = true
 
@@ -43,6 +43,10 @@ func resize_beam_(beam: Node3D, length_m: float):
 ## inches to meters.  The GUI is in inches.
 func i2m(inches: float):
 	return inches / 39.37
+
+
+func m2i(meters: float):
+	return meters * 39.37
 
 
 func rebuild_():

@@ -14,6 +14,8 @@ extends HBoxContainer
 		if not slider:
 			return
 		slider.value = p_new
+	get():
+		return slider.value
 
 @export var enabled: bool = true:
 	set(p_new):
@@ -38,6 +40,7 @@ func _ready():
 
 
 func _on_slider_value_changed(new_value: float) -> void:
+	value_readout.text = format_string % new_value
 	if not enabled:
 		return
 	value_changed.emit(new_value)
