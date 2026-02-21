@@ -1,0 +1,12 @@
+# Excluded dirs:
+# * keys are path components --- gdformat doesn't check the whole dir.
+# * values are all null --- this is how PyYAML represents sets.
+excluded_directories: !!set
+  .git: null
+  dialogue_manager: null
+  gut: null
+
+line_length: 100
+safety_checks: null
+
+# vi: set ft=yaml: #

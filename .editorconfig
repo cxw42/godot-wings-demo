@@ -1,4 +1,15 @@
-root = true
+root=true
 
 [*]
+# Use the Godot defaults --- 4-space hard tabs
+indent_style = tab
+indent_size = 4
 charset = utf-8
+
+[{gdformatrc,*.{yaml,yml}}]
+indent_style = space
+indent_size = 2
+
+[{Makefile,*.mk}]
+indent_style = tab
+indent_size = 8
