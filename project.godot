@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Wings"
-run/main_scene="uid://dv0180t8hngpc"
+run/main_scene="uid://cnbrrth4s3aob"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
 
